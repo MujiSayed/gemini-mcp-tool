@@ -2,6 +2,11 @@
 import { LOG_PREFIX } from "../constants.js";
 
 export class Logger {
+  private static truncate(value: string, maxLen = 200): string {
+    if (value.length <= maxLen) return value;
+    return value.slice(0, maxLen) + `... (${value.length} chars total)`;
+  }
+
   private static formatMessage(message: string): string {
     return `${LOG_PREFIX} ${message}` + "\n";
   }
@@ -23,15 +28,19 @@ export class Logger {
   }
 
   static toolInvocation(toolName: string, args: any): void {
-    this.warn("Raw:", JSON.stringify(args, null, 2));
+    const truncatedArgs = args ? Object.fromEntries(
+      Object.entries(args).map(([k, v]) => [k, typeof v === 'string' ? this.truncate(v) : v])
+    ) : args;
+    this.warn("Raw:", JSON.stringify(truncatedArgs, null, 2));
   }
 
   static toolParsedArgs(prompt: string, model?: string, sandbox?: boolean, changeMode?: boolean): void {
-    this.warn(`Parsed prompt: "${prompt}"\nchangeMode: ${changeMode || false}`);
+    this.warn(`Parsed prompt: "${this.truncate(prompt)}"\nchangeMode: ${changeMode || false}`);
   }
 
   static commandExecution(command: string, args: string[], startTime: number): void {
-    this.warn(`[${startTime}] Starting: ${command} ${args.map((arg) => `"${arg}"`).join(" ")}`);
+    const truncatedArgs = args.map(arg => this.truncate(arg));
+    this.warn(`[${startTime}] Starting: ${command} ${truncatedArgs.map((arg) => `"${arg}"`).join(" ")}`);
     
     // Store command execution start for timing analysis
     this._commandStartTimes.set(startTime, { command, args, startTime });

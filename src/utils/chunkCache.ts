@@ -54,11 +54,24 @@ export function cacheChunks(prompt: string, chunks: EditChunk[]): string {
 }
 
 /**
+ * Validates that a cache key is safe (lowercase hex only, max 64 chars).
+ * Prevents path traversal via crafted cache keys.
+ */
+function isValidCacheKey(key: string): boolean {
+  return /^[a-f0-9]{1,64}$/.test(key);
+}
+
+/**
  * Retrieves cached chunks if they exist and haven't expired
  * @param cacheKey The cache key returned from cacheChunks
  * @returns The cached chunks or null if expired/not found
  */
 export function getChunks(cacheKey: string): EditChunk[] | null {
+  if (!isValidCacheKey(cacheKey)) {
+    Logger.error(`Invalid cache key rejected: ${cacheKey}`);
+    return null;
+  }
+
   const filePath = path.join(CACHE_DIR, `${cacheKey}.json`);
   
   try {

@@ -1,17 +1,32 @@
 import { spawn } from "child_process";
 import { Logger } from "./logger.js";
 
+const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
 export async function executeCommand(
   command: string,
   args: string[],
-  onProgress?: (newOutput: string) => void
+  onProgress?: (newOutput: string) => void,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
     Logger.commandExecution(command, args, startTime);
 
+    const ENV_ALLOWLIST = [
+      'PATH', 'HOME', 'USER', 'SHELL', 'TERM', 'LANG', 'LC_ALL',
+      'NODE_ENV', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
+      'GOOGLE_APPLICATION_CREDENTIALS', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY',
+    ];
+    const filteredEnv: Record<string, string> = {};
+    for (const key of ENV_ALLOWLIST) {
+      if (process.env[key] !== undefined) {
+        filteredEnv[key] = process.env[key]!;
+      }
+    }
+
     const childProcess = spawn(command, args, {
-      env: process.env,
+      env: filteredEnv,
       shell: false,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -20,6 +35,15 @@ export async function executeCommand(
     let stderr = "";
     let isResolved = false;
     let lastReportedLength = 0;
+
+    const timeout = setTimeout(() => {
+      if (!isResolved) {
+        isResolved = true;
+        childProcess.kill('SIGTERM');
+        Logger.error(`Command timed out after ${timeoutMs}ms: ${command}`);
+        reject(new Error(`Command timed out after ${timeoutMs / 1000}s`));
+      }
+    }, timeoutMs);
     
     childProcess.stdout.on("data", (data) => {
       stdout += data.toString();
@@ -61,6 +85,7 @@ export async function executeCommand(
     childProcess.on("error", (error) => {
       if (!isResolved) {
         isResolved = true;
+        clearTimeout(timeout);
         Logger.error(`Process error:`, error);
         reject(new Error(`Failed to spawn command: ${error.message}`));
       }
@@ -68,6 +93,7 @@ export async function executeCommand(
     childProcess.on("close", (code) => {
       if (!isResolved) {
         isResolved = true;
+        clearTimeout(timeout);
         if (code === 0) {
           Logger.commandComplete(startTime, code, stdout.length);
           resolve(stdout.trim());

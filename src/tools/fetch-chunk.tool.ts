@@ -5,8 +5,8 @@ import { formatChangeModeResponse, summarizeChangeModeEdits } from '../utils/cha
 import { Logger } from '../utils/logger.js';
 
 const inputSchema = z.object({
-  cacheKey: z.string().describe("The cache key provided in the initial changeMode response"),
-  chunkIndex: z.number().min(1).describe("Which chunk to retrieve (1-based index)")
+  cacheKey: z.string().min(1).max(64).describe("The cache key provided in the initial changeMode response"),
+  chunkIndex: z.number().int().min(1).max(1000).describe("Which chunk to retrieve (1-based index)")
 });
 
 export const fetchChunkTool: UnifiedTool = {
