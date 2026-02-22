@@ -10,8 +10,20 @@ export async function executeCommand(
     const startTime = Date.now();
     Logger.commandExecution(command, args, startTime);
 
+    const ENV_ALLOWLIST = [
+      'PATH', 'HOME', 'USER', 'SHELL', 'TERM', 'LANG', 'LC_ALL',
+      'NODE_ENV', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
+      'GOOGLE_APPLICATION_CREDENTIALS', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY',
+    ];
+    const filteredEnv: Record<string, string> = {};
+    for (const key of ENV_ALLOWLIST) {
+      if (process.env[key] !== undefined) {
+        filteredEnv[key] = process.env[key]!;
+      }
+    }
+
     const childProcess = spawn(command, args, {
-      env: process.env,
+      env: filteredEnv,
       shell: false,
       stdio: ["ignore", "pipe", "pipe"],
     });
