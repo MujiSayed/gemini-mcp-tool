@@ -117,7 +117,7 @@ ${domain ? `Given the ${domain} domain, I'll apply the most effective combinatio
 
 const brainstormArgsSchema = z.object({
   prompt: z.string().min(1).max(100_000).describe("Primary brainstorming challenge or question to explore"),
-  model: z.string().regex(/^[a-z0-9][a-z0-9.\-]*$/, "Invalid model name").max(64).optional().describe("Optional model to use (e.g., 'gemini-2.5-flash'). If not specified, uses the default model (gemini-2.5-pro)."),
+  model: z.string().regex(/^[a-z0-9][a-z0-9.\-]*$/, "Invalid model name").max(64).optional().describe("Optional model override. Examples: 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-2.5-flash-lite'. Defaults to gemini-2.5-pro."),
   methodology: z.enum(['divergent', 'convergent', 'scamper', 'design-thinking', 'lateral', 'auto']).default('auto').describe("Brainstorming framework: 'divergent' (generate many ideas), 'convergent' (refine existing), 'scamper' (systematic triggers), 'design-thinking' (human-centered), 'lateral' (unexpected connections), 'auto' (AI selects best)"),
   domain: z.string().max(200).optional().describe("Domain context for specialized brainstorming (e.g., 'software', 'business', 'creative', 'research', 'product', 'marketing')"),
   constraints: z.string().max(5000).optional().describe("Known limitations, requirements, or boundaries (budget, time, technical, legal, etc.)"),
