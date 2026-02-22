@@ -1,8 +1,6 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default withMermaid(
-  defineConfig({
+export default defineConfig({
     title: 'Gemini MCP Tool Documentation',
     description: 'Bridge Gemini models with Claude Desktop',
     base: '/gemini-mcp-tool/',
@@ -66,7 +64,7 @@ export default withMermaid(
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/jamubc/gemini-mcp-tool' }
+      { icon: 'github', link: 'https://github.com/MujiSayed/gemini-mcp-tool' }
     ],
 
     footer: {
@@ -79,4 +77,3 @@ export default withMermaid(
     }
   }
 })
-)
